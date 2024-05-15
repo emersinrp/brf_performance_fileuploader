@@ -1,3 +1,6 @@
+from datetime import datetime, timedelta
+
+import pytz
 import requests
 import time
 from dotenv import load_dotenv
@@ -5,24 +8,30 @@ import os
 
 load_dotenv()
 
-authorization_qas = None
-token_expiry = time.time() - 1  # Inicializando com um valor menor que o tempo atual
+token_expiry = None  # Inicializando com um valor menor que o tempo atual
+expiry_token_qas = token_expiry
 
 
 def refresh_token():
-    global authorization_qas
     print("ESTA PASSANDO AQUI")
-    authorization_qas = get_authentication()  # Obtendo um novo token
-    print("AUTORIZATHION QAS: ", authorization_qas)
+    auth, token_expiry = get_authentication()  # Obtendo um novo token
+    print("AUTORIZATHION QAS: ", auth, token_expiry)
+
+    return auth, token_expiry
 
 
-def check_token_expiry():
-    global token_expiry
-    global authorization_qas
+def check_token_expiry(token_expiry, token):
+    print("TOKEN EXPIRY: ", datetime.strptime(token_expiry, "%Y-%m-%dT%H:%M:%S.%f"))
+    print("TIME TIME: ", datetime.utcnow())
+    if datetime.now() > datetime.strptime(token_expiry, "%Y-%m-%dT%H:%M:%S.%f"):
+        new_token, expiry_token_qas = refresh_token()  # Renova o token se tiver expirado
 
-    if time.time() > token_expiry:
-        refresh_token()  # Renova o token se tiver expirado
-        token_expiry = time.time() + 1800  # Atualiza o tempo de validade para 30 minutos à frente
+        print("TEM QUE ENTRAR AQUI: ", expiry_token_qas)
+    else:
+        new_token = token
+        expiry_token_qas = token_expiry
+
+    return expiry_token_qas, new_token
 
 
 def get_authentication():
@@ -39,4 +48,4 @@ def get_authentication():
 
     resposta = response.json()
 
-    return f'{resposta["token"]}'
+    return f'{resposta["token"]}', f'{resposta["expire_at"]}'
