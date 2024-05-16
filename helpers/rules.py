@@ -1,4 +1,5 @@
 import random
+from helpers.auth import refresh_token
 
 
 def prepare_upload_data(file_list):
@@ -22,6 +23,9 @@ def handle_response(response, file_name, authorization_qas):
             print(f"Erro ao enviar POST : {response.text}, {response.status_code} \n"
                   f"Imagem enviada: {file_name} \n")
     elif response.status_code == 401:
-        print("Refreshing token...")
+        print("Refreshing token - Atraves do 401...")
+
+        return refresh_token()
+
     else:
         print("--- FALHA NA REQUISIÇÃO")

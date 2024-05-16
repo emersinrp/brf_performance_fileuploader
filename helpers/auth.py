@@ -13,9 +13,9 @@ expiry_token_qas = token_expiry
 
 
 def refresh_token():
-    print("ESTA PASSANDO AQUI")
+    print("Passou pelo: REFRESH_TOKEN")
     auth, token_expiry = get_authentication()  # Obtendo um novo token
-    print("AUTORIZATHION QAS: ", auth, token_expiry)
+    print("REFRESH_TOKEN authorization QAs: ", auth, token_expiry)
 
     return auth, token_expiry
 
@@ -23,7 +23,9 @@ def refresh_token():
 def check_token_expiry(token_expiry, token):
     print("TOKEN EXPIRY: ", datetime.strptime(token_expiry, "%Y-%m-%dT%H:%M:%S.%f"))
     print("TIME TIME: ", datetime.utcnow())
-    if datetime.now() > datetime.strptime(token_expiry, "%Y-%m-%dT%H:%M:%S.%f"):
+    time_expiry = datetime.strptime(token_expiry, "%Y-%m-%dT%H:%M:%S.%f") - timedelta(seconds=10)
+    if datetime.now() > time_expiry:
+        print("ENTROU: ", time_expiry)
         new_token, expiry_token_qas = refresh_token()  # Renova o token se tiver expirado
 
         print("TEM QUE ENTRAR AQUI: ", expiry_token_qas)
