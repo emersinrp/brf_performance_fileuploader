@@ -11,7 +11,7 @@ def refresh_token():  # get a new token
 
 
 def check_token_expiry(token_expiry, token):  # validates token expiration
-    time_expiry = datetime.strptime(token_expiry, "%Y-%m-%dT%H:%M:%S.%f") - timedelta(seconds=15)
+    time_expiry = datetime.strptime(token_expiry, "%Y-%m-%dT%H:%M:%S.%f") - timedelta(seconds=300)
     if datetime.utcnow() > time_expiry:
         new_token, new_token_expiry = refresh_token()  # renew the token if it has expired
         return new_token_expiry, new_token
