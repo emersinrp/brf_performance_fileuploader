@@ -1,22 +1,23 @@
 from datetime import datetime, timedelta
 import requests
+import os
 from dotenv import load_dotenv
 
 load_dotenv()
 
 
 def get_new_token_ygg():
-    url = "https://ygg-qas.brf.cloud/token"
+    url = os.environ["AUTH_YGG_QAS"]
     payload = {
         'grant_type': 'client_credentials',
         'client_id': 'operation',
-        'client_secret': 'lyd5u0UYmsbQhFIiTwGjf4Uk0vSZhPGy',
+        'client_secret': os.environ["AUTH_YGG_CLIENT_SECRET_BODY"],
         'scope': 'openid'
     }
     headers = {
         'Content-Type': 'application/x-www-form-urlencoded',
         'client_id': 'financial',
-        'client_secret': '17KcCvHtiqTTxmSzxjKYtnBylfZjnr6l',
+        'client_secret': os.environ["AUTH_YGG_CLIENT_SECRET_HEADER"],
         'Cookie': 'visid_incap_2849035=kxgVA4uDTI+ZucI9a3Dud+LOa2QAAAAAQUIPAAAAAACLiw8529l1QAxwv6n1/vyZ; '
                   'visid_incap_2927240=kXxG8zS3QHWHS6LYFBPLyCUji2QAAAAAQUIPAAAAAACCPFSv9P7NvxrlrjlZUUEw'
     }
@@ -47,7 +48,7 @@ def check_token_expiry(auth_token_expiry, auth_token, new_token_expiry, new_toke
 
 # Função que gera o token do file uploader
 def get_authentication():
-    url = "https://ygg-qas.brf.cloud/fileuploader/file_uploader/auth"
+    url = os.environ["AUTH_FILEUPLOADER_QAS"]
     new_token, _ = get_new_token_ygg()  # Obtenha o novo token para o header 'Authorization'
     headers = {
         'vendor-id': 'fileuploader-ygg-rvv',
