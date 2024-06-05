@@ -1,7 +1,8 @@
-from locust import HttpUser, task, between, tag
+import random
+from locust import HttpUser, task, between
 import os
 from dotenv import load_dotenv
-from helpers.auth import refresh_token, check_token_expiry
+from helpers.auth import refresh_tokens, check_token_expiry
 from helpers.rules import prepare_upload_data, handle_response
 
 load_dotenv()
@@ -10,8 +11,10 @@ load_dotenv()
 class PostFileUploader(HttpUser):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.token_expiry = None
-        self.authorization_qas = None
+        self.auth_token_expiry = None
+        self.auth_token = None
+        self.new_token_expiry = None
+        self.new_token = None
 
     host = os.environ["KONG_FILEUPLOADER_QAS"]
     wait_time = between(2, 5)
@@ -25,23 +28,26 @@ class PostFileUploader(HttpUser):
                   "imagens_teste/teste_img_14.jpg"]
 
     def on_start(self):
-        self.authorization_qas, self.token_expiry = refresh_token()  # calling the method to get the initial token
+        self.auth_token, self.auth_token_expiry, self.new_token, self.new_token_expiry = refresh_tokens()
+        # Obtém os tokens iniciais
 
     @task
     def post_file_uploader(self):
-        self.token_expiry, self.authorization_qas = check_token_expiry(self.token_expiry,
-                                                                       self.authorization_qas)  # checks whether the
-        # token has expired before sending a request
+        self.auth_token_expiry, self.auth_token, self.new_token_expiry, self.new_token = check_token_expiry(
+            self.auth_token_expiry, self.auth_token, self.new_token_expiry, self.new_token)
         post_fileuploader = f"{self.prefix_fileuploader}"
         headers = {
             'vendor-id': 'fileuploader-ygg-rvv',
-            'token': f'{self.authorization_qas}',  # updating the token value
-            'Accept': 'application/json'
+            'Accept': 'application/json',
+            'Authorization': f'Bearer {self.new_token}',  # Atualiza o valor do novo token Ygg
+            'token': self.auth_token  # Adiciona o token de autenticação File Uploader
         }
 
-        file_name, file_content = prepare_upload_data(self.LIST_FILES)
-        files = {"files": (file_name, file_content, "image/jpeg")}
+        num_files = random.randint(1, len(self.LIST_FILES))
+        # Número aleatório de arquivos entre 1 e o total de arquivos disponíveis
+        files = prepare_upload_data(self.LIST_FILES, num_files)
+        files_data = [("files", (file_name, content, "image/jpeg")) for file_name, content in files.items()]
 
-        response = self.client.post(post_fileuploader, headers=headers, files=files, name="Post - File Uploader")
+        response = self.client.post(post_fileuploader, headers=headers, files=files_data, name="Post - File Uploader")
 
-        handle_response(response, file_name, self.authorization_qas)
+        handle_response(response, list(files.keys()), self.new_token)
